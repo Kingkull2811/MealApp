@@ -1,14 +1,6 @@
-package com.truong.quickmeal.Models;
+package com.truong.quickmeal.Models
 
-public class Temperature {
-    public int number;
-    public String unit;
-
-    public int getNumber() {
-        return number;
-    }
-
-    public String getUnit() {
-        return unit;
-    }
+class Temperature {
+    var number = 0
+    var unit: String? = null
 }

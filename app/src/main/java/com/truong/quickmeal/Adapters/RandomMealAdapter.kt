@@ -1,105 +1,145 @@
-package com.truong.quickmeal.Adapters;
+package com.truong.quickmeal.Adapters
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.content.Context
+import com.truong.quickmeal.Models.Ingredient
+import com.truong.quickmeal.Models.Equipment
+import com.truong.quickmeal.Models.Us
+import com.truong.quickmeal.Models.Metric
+import com.truong.quickmeal.Models.Temperature
+import com.truong.quickmeal.Models.ProductMatch
+import com.truong.quickmeal.Models.ExtendedIngredient
+import com.truong.quickmeal.Models.AnalyzedInstruction
+import com.truong.quickmeal.Models.Measures
+import com.truong.quickmeal.Models.RandomRecipe
+import com.truong.quickmeal.Models.WinePairing
+import com.truong.quickmeal.Listeners.CustomOnClickListener
+import androidx.recyclerview.widget.RecyclerView
+import com.truong.quickmeal.Adapters.RandomMealViewHolder
+import android.view.ViewGroup
+import android.view.LayoutInflater
+import com.truong.quickmeal.R
+import com.squareup.picasso.Picasso
+import androidx.cardview.widget.CardView
+import com.truong.quickmeal.Adapters.IngredientsViewHolder
+import com.truong.quickmeal.Models.SimilarRecipeResponse
+import com.truong.quickmeal.Adapters.SimilarViewHolder
+import com.truong.quickmeal.Models.InstructionsResponse
+import com.truong.quickmeal.Adapters.InstructionViewHolder
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.truong.quickmeal.Adapters.InstructionStepsAdapter
+import com.truong.quickmeal.Adapters.StepsViewHolder
+import com.truong.quickmeal.Adapters.InstructionStepItemsAdapter
+import com.truong.quickmeal.Adapters.InstructionStepIngredientsAdapter
+import com.truong.quickmeal.Adapters.InstructionStepIngredientsViewHolder
+import com.truong.quickmeal.Models.RecipeDetailsResponse
+import androidx.appcompat.app.AppCompatActivity
+import com.truong.quickmeal.RequestManager
+import com.truong.quickmeal.Adapters.RandomMealAdapter
+import android.os.Bundle
+import com.github.ybq.android.spinkit.sprite.Sprite
+import com.github.ybq.android.spinkit.style.Wave
+import com.truong.quickmeal.Listeners.RandomAPIResponseListener
+import android.content.Intent
+import android.view.View
+import android.widget.*
+import com.truong.quickmeal.RecipeDetailActivity
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import com.truong.quickmeal.RequestManager.CallRandomRecipe
+import com.truong.quickmeal.Models.RandomRecipeResponse
+import com.truong.quickmeal.Listeners.RecipeDetailsResponseListener
+import com.truong.quickmeal.RequestManager.CallRecipeDetails
+import com.truong.quickmeal.Listeners.SimilarRecipeListener
+import com.truong.quickmeal.RequestManager.CallSimilarRecipes
+import com.truong.quickmeal.Listeners.InstructionsListener
+import com.truong.quickmeal.RequestManager.CallInstructions
+import retrofit2.http.GET
+import com.truong.quickmeal.Adapters.IngredientsAdapter
+import com.truong.quickmeal.Adapters.SimilarListAdapter
+import com.truong.quickmeal.Adapters.InstructionsAdapter
 
-import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.truong.quickmeal.Listeners.CustomOnClickListener;
-import com.truong.quickmeal.Models.RandomRecipe;
-import com.truong.quickmeal.R;
-import com.squareup.picasso.Picasso;
-
-import java.util.List;
-
-public class RandomMealAdapter extends RecyclerView.Adapter<RandomMealViewHolder>{
-
-    Context context;
-    List<RandomRecipe> list;
-    CustomOnClickListener listener;
-
-    public RandomMealAdapter(Context context, List<RandomRecipe> list, CustomOnClickListener listener) {
-        this.context = context;
-        this.list = list;
-        this.listener = listener;
+class RandomMealAdapter(
+    var context: Context,
+    var list: List<RandomRecipe?>?,
+    var listener: CustomOnClickListener
+) : RecyclerView.Adapter<RandomMealViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RandomMealViewHolder {
+        return RandomMealViewHolder(
+            LayoutInflater.from(context).inflate(R.layout.list_random, parent, false)
+        )
     }
 
-    @NonNull
-    @Override
-    public RandomMealViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new RandomMealViewHolder(LayoutInflater.from(context).inflate(R.layout.list_random, parent, false));
+    override fun onBindViewHolder(holder: RandomMealViewHolder, position: Int) {
+        holder.textView_title.text = list!!.get(position)!!.title
+        holder.textView_title.isSelected = true
+        holder.textView_ready_time.text =
+            list!!.get(position)?.readyInMinutes.toString() + " Min"
+        holder.textView_likes.text = list!!.get(position)!!.aggregateLikes.toString() + " Likes"
+        holder.textView_serving_cost.text =
+            list!!.get(position)?.servings.toString() + " Servings"
+        Picasso.get().load(list!![position]?.image).into(holder.imageView_food)
+        if (list!![position]!!.isVegetarian) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " Vegetarian"
+        }
+        if (list!![position]!!.isVegan) {
+            holder.textView_tags_frees.text = holder.textView_tags_frees.text.toString() + " Vegan"
+        }
+        if (list!![position]!!.isGlutenFree) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " GlutenFree"
+        }
+        if (list!![position]!!.isDairyFree) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " DairyFree"
+        }
+        if (list!![position]!!.isVeryHealthy) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " Very Healthy"
+        }
+        if (list!![position]!!.isCheap) {
+            holder.textView_tags_frees.text = holder.textView_tags_frees.text.toString() + " Cheap"
+        }
+        if (list!![position]!!.isVeryPopular) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " Very Popular"
+        }
+        if (list!![position]!!.isSustainable) {
+            holder.textView_tags_frees.text =
+                holder.textView_tags_frees.text.toString() + " Sustainable"
+        }
+        holder.textView_tags_frees.isSelected = true
+        holder.home_list_container.setOnClickListener(View.OnClickListener {
+            listener.onClick(
+                list!![holder.adapterPosition]?.id.toString()
+            )
+        })
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull RandomMealViewHolder holder, int position) {
-        holder.textView_title.setText(list.get(position).title);
-        holder.textView_title.setSelected(true);
-        holder.textView_ready_time.setText(String.valueOf(list.get(position).getReadyInMinutes())+" Min");
-        holder.textView_likes.setText(String.valueOf(list.get(position).aggregateLikes)+" Likes");
-        holder.textView_serving_cost.setText(String.valueOf(list.get(position).getServings())+" Servings");
-        Picasso.get().load(list.get(position).getImage()).into(holder.imageView_food);
-        if (list.get(position).isVegetarian()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Vegetarian");
-        }
-        if (list.get(position).isVegan()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Vegan");
-        }
-        if (list.get(position).isGlutenFree()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" GlutenFree");
-        }
-        if (list.get(position).isDairyFree()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" DairyFree");
-        }
-        if (list.get(position).isVeryHealthy()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Very Healthy");
-        }
-        if (list.get(position).isCheap()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Cheap");
-        }
-        if (list.get(position).isVeryPopular()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Very Popular");
-        }
-        if (list.get(position).isSustainable()){
-            holder.textView_tags_frees.setText(holder.textView_tags_frees.getText()+" Sustainable");
-        }
-        holder.textView_tags_frees.setSelected(true);
-
-        holder.home_list_container.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listener.onClick(String.valueOf(list.get(holder.getAdapterPosition()).getId()));
-            }
-        });
-    }
-
-    @Override
-    public int getItemCount() {
-        return list.size();
+    override fun getItemCount(): Int {
+        return list!!.size
     }
 }
 
-class RandomMealViewHolder extends RecyclerView.ViewHolder {
+class RandomMealViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    var textView_title: TextView
+    var textView_ready_time: TextView
+    var textView_serving_cost: TextView
+    var textView_likes: TextView
+    var textView_tags_frees: TextView
+    var textView_tags_includes: TextView
+    var imageView_food: ImageView
+    var home_list_container: CardView
 
-    TextView textView_title, textView_ready_time, textView_serving_cost, textView_likes, textView_tags_frees, textView_tags_includes;
-    ImageView imageView_food;
-    CardView home_list_container;
-
-    public RandomMealViewHolder(@NonNull View itemView) {
-        super(itemView);
-
-        textView_title = itemView.findViewById(R.id.textView_title);
-        textView_ready_time = itemView.findViewById(R.id.textView_ready_time);
-        imageView_food = itemView.findViewById(R.id.imageView_food);
-        textView_likes = itemView.findViewById(R.id.textView_likes);
-        textView_serving_cost = itemView.findViewById(R.id.textView_serving_cost);
-        textView_tags_includes = itemView.findViewById(R.id.textView_tags_includes);
-        textView_tags_frees = itemView.findViewById(R.id.textView_tags_frees);
-        home_list_container = itemView.findViewById(R.id.home_list_container);
+    init {
+        textView_title = itemView.findViewById(R.id.textView_title)
+        textView_ready_time = itemView.findViewById(R.id.textView_ready_time)
+        imageView_food = itemView.findViewById(R.id.imageView_food)
+        textView_likes = itemView.findViewById(R.id.textView_likes)
+        textView_serving_cost = itemView.findViewById(R.id.textView_serving_cost)
+        textView_tags_includes = itemView.findViewById(R.id.textView_tags_includes)
+        textView_tags_frees = itemView.findViewById(R.id.textView_tags_frees)
+        home_list_container = itemView.findViewById(R.id.home_list_container)
     }
 }
